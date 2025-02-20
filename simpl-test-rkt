@@ -1,0 +1,55 @@
+#lang racket
+
+(require rackunit
+         "simpl.rkt"
+         "ast.rkt"
+         "expval.rkt")
+
+(define simpl-tests
+  (test-suite
+   "Simplifier test suite"
+
+   ;; Prueba para doble negación
+   (test-case "Double negation"
+     (check-equal?
+      (simplify (l-not (l-not (l-atom 'p))))
+      (l-atom 'p)))
+
+   ;; Pruebas para idempotencia
+   (test-case "Idempotence for AND"
+     (check-equal?
+      (simplify (l-and (l-atom 'p) (l-atom 'p)))
+      (l-atom 'p)))
+
+   (test-case "Idempotence for OR"
+     (check-equal?
+      (simplify (l-or (l-atom 'p) (l-atom 'p)))
+      (l-atom 'p)))
+
+   ;; Pruebas para ley de absorción
+   (test-case "Absorption for AND"
+     (check-equal?
+      (simplify (l-and (l-atom 'p) (l-or (l-atom 'p) (l-atom 'q))))
+      (l-atom 'p)))
+
+   (test-case "Absorption for OR"
+     (check-equal?
+      (simplify (l-or (l-atom 'p) (l-and (l-atom 'p) (l-atom 'q))))
+      (l-atom 'p)))
+
+   ;; Prueba para simplificación de implicación
+   (test-case "Implication simplification"
+     (check-equal?
+      (simplify (l-impl (l-atom 'p) (l-atom 'q)))
+      (simplify (l-or (l-not (l-atom 'p)) (l-atom 'q)))))
+
+   ;; Prueba de combinación compleja
+   (test-case "Complex combination"
+     (check-equal?
+      (simplify (l-and (l-atom 'p)
+                       (l-or (l-not (l-not (l-atom 'p))) (l-atom 'q))))
+      (l-atom 'p)))))
+
+(provide
+ (contract-out
+  [simpl-tests test-suite?]))
